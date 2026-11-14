@@ -57,6 +57,7 @@ public:
     DeleteStatus removeBadSong(QString path);
     QString findCdgAudioFile(const QString& path);
     int addSong(okj::KaraokeSong song);
+    std::vector<std::shared_ptr<okj::KaraokeSong>> findExact(const QString &artist, const QString &title) const;
 
 
 private:

@@ -152,6 +152,7 @@ DlgSettings::DlgSettings(MediaBackend &AudioBackend, MediaBackend &BmAudioBacken
     ui->lineEditUrl->setText(m_settings.requestServerUrl());
     ui->lineEditApiKey->setText(m_settings.requestServerApiKey());
     ui->checkBoxIgnoreCertErrors->setChecked(m_settings.requestServerIgnoreCertErrors());
+    ui->checkBoxAutoAddRequests->setChecked(m_settings.requestServerAutoAdd());
     if ((m_settings.bgMode() == m_settings.BG_MODE_IMAGE) || (m_settings.bgSlideShowDir() == ""))
         ui->rbBgImage->setChecked(true);
     else
@@ -513,6 +514,12 @@ void DlgSettings::on_checkBoxIgnoreCertErrors_toggled(bool checked) {
     if (!m_pageSetupDone)
         return;
     m_settings.setRequestServerIgnoreCertErrors(checked);
+}
+
+void DlgSettings::on_checkBoxAutoAddRequests_toggled(bool checked) {
+    if (!m_pageSetupDone)
+        return;
+    m_settings.setRequestServerAutoAdd(checked);
 }
 
 void DlgSettings::on_groupBoxRequestServer_toggled(bool arg1) {

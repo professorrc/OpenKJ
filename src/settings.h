@@ -157,6 +157,8 @@ public:
     void setRequestServerApiKey(QString apiKey);
     bool requestServerIgnoreCertErrors();
     void setRequestServerIgnoreCertErrors(bool ignore);
+    bool requestServerAutoAdd();
+    void setRequestServerAutoAdd(bool enabled);
     bool audioUseFader();
     bool audioUseFaderBm();
     void setAudioUseFader(bool fader);

@@ -951,6 +951,16 @@ void Settings::setRequestServerIgnoreCertErrors(bool ignore)
     settings->setValue("requestServerIgnoreCertErrors", ignore);
 }
 
+bool Settings::requestServerAutoAdd()
+{
+    return settings->value("requestServerAutoAdd", false).toBool();
+}
+
+void Settings::setRequestServerAutoAdd(bool enabled)
+{
+    settings->setValue("requestServerAutoAdd", enabled);
+}
+
 bool Settings::audioUseFader()
 {
     return settings->value("audioUseFader", true).toBool();

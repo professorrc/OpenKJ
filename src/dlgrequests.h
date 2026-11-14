@@ -23,6 +23,7 @@
 
 #include <QDialog>
 #include <QItemSelection>
+#include <QSet>
 #include "src/models/tablemodelrequests.h"
 #include "src/models/tablemodelkaraokesongs.h"
 #include "src/models/tablemodelrotation.h"
@@ -50,6 +51,9 @@ private:
     QTimer testTimer;
     std::shared_ptr<spdlog::logger> m_reqLogger;
     std::vector<int> m_prevRequestList;
+    QSet<int> m_autoAddedIds;
+    QSet<int> m_skippedIds;
+    void autoAddRequests();
     OKJSongbookAPI &songbookApi;
     Settings m_settings;
 

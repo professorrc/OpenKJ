@@ -547,3 +547,18 @@ int TableModelKaraokeSongs::addSong(okj::KaraokeSong song) {
         return lastInsertId;
     }
 }
+
+std::vector<std::shared_ptr<okj::KaraokeSong>> TableModelKaraokeSongs::findExact(const QString &artist, const QString &title) const {
+    std::vector<std::shared_ptr<okj::KaraokeSong>> matches;
+    const QString a = artist.trimmed().toLower();
+    const QString t = title.trimmed().toLower();
+    if (a.isEmpty() || t.isEmpty())
+        return matches;
+    for (const auto &song : m_allSongs) {
+        if (song->bad || song->dropped)
+            continue;
+        if (song->artistL.trimmed() == a && song->titleL.trimmed() == t)
+            matches.push_back(song);
+    }
+    return matches;
+}

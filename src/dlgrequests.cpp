@@ -20,6 +20,7 @@
 
 #include "dlgrequests.h"
 #include "ui_dlgrequests.h"
+#include <algorithm>
 #include <QDesktopServices>
 #include <QMenu>
 #include <QMessageBox>
@@ -130,11 +131,13 @@ void DlgRequests::databaseAboutToUpdate() {
 
 void DlgRequests::databaseUpdateComplete() {
     dbModel.loadData();
+    m_skippedIds.clear();
     autoSizeViews();
 }
 
 void DlgRequests::databaseSongAdded() {
     dbModel.loadData();
+    m_skippedIds.clear();
 }
 
 void DlgRequests::rotationChanged() {
@@ -171,9 +174,96 @@ void DlgRequests::on_pushButtonClose_clicked() {
     close();
 }
 
+void DlgRequests::autoAddRequests() {
+    auto requests = requestsModel->requests();
+
+    // Forget ids the server no longer reports (removal finished).
+    QSet<int> current;
+    for (const auto &r : requests)
+        current.insert(r.requestId());
+    m_autoAddedIds.intersect(current);
+    m_skippedIds.intersect(current);
+
+    if (!m_settings.requestServerAutoAdd())
+        return;
+
+    // Oldest first, so singers land in the rotation in the order they asked.
+    std::stable_sort(requests.begin(), requests.end(), [](const Request &a, const Request &b) {
+        return a.timeStamp() < b.timeStamp();
+    });
+
+    for (const auto &request : requests) {
+        const int requestId = request.requestId();
+        if (m_autoAddedIds.contains(requestId) || m_skippedIds.contains(requestId))
+            continue;
+        const QString singerName = request.singer().trimmed();
+        if (singerName.isEmpty())
+            continue;
+        auto matches = dbModel.findExact(request.artist(), request.title());
+        if (matches.size() != 1) {
+            m_reqLogger->info("RequestID: {} | Auto-add skipped, {} local matches | Song: {} - {}",
+                              requestId,
+                              matches.size(),
+                              request.artist().toStdString(),
+                              request.title().toStdString()
+            );
+            m_reqLogger->flush();
+            // Leave it for manual handling; remember it so the log is not flooded every poll.
+            m_skippedIds.insert(requestId);
+            continue;
+        }
+        const auto &song = matches.front();
+
+        // Rotation lookup by name is case sensitive, so find the stored spelling first.
+        QString existingName;
+        for (const auto &name : rotModel.singers()) {
+            if (name.trimmed().compare(singerName, Qt::CaseInsensitive) == 0) {
+                existingName = name;
+                break;
+            }
+        }
+
+        int singerId;
+        bool newSinger = false;
+        if (!existingName.isEmpty()) {
+            singerId = rotModel.getSingerByName(existingName).id;
+        } else {
+            singerId = rotModel.singerAdd(singerName, TableModelRotation::ADD_BOTTOM);
+            newSinger = true;
+        }
+        if (singerId < 0) {
+            m_reqLogger->info("RequestID: {} | Auto-add failed, could not resolve singer {}", requestId,
+                              singerName.toStdString());
+            m_reqLogger->flush();
+            m_skippedIds.insert(requestId);
+            continue;
+        }
+
+        emit addRequestSong(song->id, singerId, 0);
+        m_autoAddedIds.insert(requestId);
+        songbookApi.removeRequest(requestId);
+        m_reqLogger->info(
+                "RequestID: {} | Auto-added to {} singer | Name: {} | Song: {} - {} - {} | Removed from request list",
+                requestId,
+                newSinger ? "new" : "existing",
+                singerName.toStdString(),
+                song->songid.toStdString(),
+                song->artist.toStdString(),
+                song->title.toStdString()
+        );
+        m_reqLogger->flush();
+    }
+}
+
 void DlgRequests::requestsModified() {
     static int testruns = 0;
-    if ((requestsModel->count() > 0) && (m_settings.requestDialogAutoShow())) {
+    autoAddRequests();
+    int pendingManual = 0;
+    for (const auto &r : requestsModel->requests()) {
+        if (!m_autoAddedIds.contains(r.requestId()))
+            pendingManual++;
+    }
+    if ((pendingManual > 0) && (m_settings.requestDialogAutoShow())) {
         this->show();
         this->raise();
     }
