@@ -206,14 +206,20 @@ jobs:
         mkdir output
         copy build\openkj.exe output\
 
+    # The VS shell step drops Qt's bin folder from PATH, so call windeployqt by
+    # full path, and fail the build if it does not deploy the Qt libraries.
     - name: Run windeployqt
       run: |
-        windeployqt --release --compiler-runtime output/openkj.exe
-        dir output
-      shell: cmd
+        & (Join-Path $env:QT_ROOT_DIR 'bin\windeployqt.exe') --release --compiler-runtime output\openkj.exe
+        if ($LASTEXITCODE -ne 0) { throw "windeployqt failed with exit code $LASTEXITCODE" }
+        foreach ($f in 'Qt5Core.dll','Qt5Sql.dll','Qt5Widgets.dll','Qt5Network.dll','sqldrivers\qsqlite.dll','platforms\qwindows.dll') {
+          if (-not (Test-Path (Join-Path output $f))) { throw "windeployqt did not deploy $f" }
+        }
+        Get-ChildItem output -Recurse -File | Measure-Object Length -Sum | ForEach-Object { "output: $($_.Count) files, $([math]::Round($_.Sum/1MB)) MB" }
+      shell: pwsh
 
-    # Qt 5.15.2's windeployqt does not recognise current Visual Studio, so it
-    # skips vc_redist.x64.exe, which the installer runs. Copy it in directly.
+    # The installer runs vc_redist.x64.exe. Copy it from the VS install so it is
+    # there even if windeployqt does not pick it up for this Visual Studio version.
     - name: Copy in VC++ redistributable
       run: |
         $src = Join-Path $env:VCToolsRedistDir 'vc_redist.${{ matrix.msvcarch }}.exe'
