@@ -1775,7 +1775,7 @@ void MainWindow::actionSettingsTriggered() {
     connect(settingsDialog, &DlgSettings::applicationFontChanged, &m_qModel, &TableModelQueueSongs::setFont);
     connect(settingsDialog, &DlgSettings::applicationFontChanged, &m_historySongsModel, &TableModelHistorySongs::setFont);
     connect(settingsDialog, &DlgSettings::applicationFontChanged, this, &MainWindow::appFontChanged);
-    connect(settingsDialog, &DlgSettings::alertBgColorChanged, cdgWindow.get(), &DlgCdg::alertBgColorChanged);
+    connect(settingsDialog, &DlgSettings::alertBorderColorChanged, cdgWindow.get(), &DlgCdg::alertBorderColorChanged);
     connect(settingsDialog, &DlgSettings::alertTxtColorChanged, cdgWindow.get(), &DlgCdg::alertTxtColorChanged);
     connect(settingsDialog, &DlgSettings::bgModeChanged, cdgWindow.get(), &DlgCdg::applyBackgroundImageMode);
     connect(settingsDialog, &DlgSettings::bgSlideShowDirChanged, cdgWindow.get(), &DlgCdg::applyBackgroundImageMode);

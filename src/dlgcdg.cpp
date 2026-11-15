@@ -75,6 +75,7 @@ DlgCdg::DlgCdg(MediaBackend &KaraokeBackend, MediaBackend &BreakBackend, QWidget
     alertFontChanged(m_settings.karaokeAAAlertFont());
     alertBgColorChanged(m_settings.alertBgColor());
     alertTxtColorChanged(m_settings.alertTxtColor());
+    alertBorderColorChanged(m_settings.alertBorderColor());
     cdgOffsetsChanged();
     connect(ui->videoDisplayKar, &VideoDisplay::mouseMoveEvent, this, &DlgCdg::mouseMove);
     connect(ui->btnToggleFullscreen, &QPushButton::clicked, this, &DlgCdg::btnToggleFullscreenClicked);
@@ -174,12 +175,18 @@ void DlgCdg::showAlert(bool show)
 {
     if ((show) && (m_settings.karaokeAAAlertEnabled()))
     {
-        ui->videoDisplayKar->hide();
+        // Draw the alert as outlined text over the background image instead of
+        // the old solid-colour panel.
+        m_alertActive = true;
+        ui->widgetAlert->hide();
         ui->videoDisplayBm->hide();
-        ui->widgetAlert->show();
+        ui->videoDisplayKar->show();
+        updateAlertOverlay();
     }
     else
     {
+        m_alertActive = false;
+        ui->videoDisplayKar->clearOverlay();
         ui->widgetAlert->hide();
         if (m_bmb.hasActiveVideo() && !m_kmb.hasActiveVideo()) {
             ui->videoDisplayBm->show();
@@ -192,14 +199,49 @@ void DlgCdg::showAlert(bool show)
     }
 }
 
+void DlgCdg::updateAlertOverlay()
+{
+    if (!m_alertActive)
+        return;
+    QFont big = m_alertFont;
+    QFont small = m_alertFont;
+    if (small.pointSizeF() > 0)
+        small.setPointSizeF(small.pointSizeF() * 0.7);
+    else if (small.pixelSize() > 0)
+        small.setPixelSize(std::max(1, static_cast<int>(small.pixelSize() * 0.7)));
+    QFont gap = small;
+    if (gap.pointSizeF() > 0)
+        gap.setPointSizeF(gap.pointSizeF() * 0.6);
+    else if (gap.pixelSize() > 0)
+        gap.setPixelSize(std::max(1, static_cast<int>(gap.pixelSize() * 0.6)));
+
+    QList<VideoOverlayLine> lines;
+    lines.append({tr("Next Up:"), small});
+    lines.append({m_alertSinger, big});
+    lines.append({m_alertSong, small});
+    if (!m_alertUpcoming.isEmpty()) {
+        lines.append({QString(), gap});
+        lines.append({tr("After that:"), small});
+        for (const auto &l : m_alertUpcoming)
+            lines.append({l, small});
+    }
+    lines.append({QString(), gap});
+    lines.append({tr("Starts in: ") + QString::number(m_countdownPos) + tr(" seconds"), big});
+    ui->videoDisplayKar->setOverlay(lines, m_alertTextColor, m_alertBorderColor);
+}
+
 void DlgCdg::setNextSinger(const QString &name)
 {
     ui->lblNextSinger->setText(name);
+    m_alertSinger = name;
+    updateAlertOverlay();
 }
 
 void DlgCdg::setNextSong(const QString &song)
 {
     ui->lblNextSong->setText(song);
+    m_alertSong = song;
+    updateAlertOverlay();
 }
 
 void DlgCdg::setUpcomingSingers(const QStringList &lines)
@@ -207,6 +249,8 @@ void DlgCdg::setUpcomingSingers(const QStringList &lines)
     ui->lblUpcomingTitle->setVisible(!lines.isEmpty());
     ui->lblUpcoming->setVisible(!lines.isEmpty());
     ui->lblUpcoming->setText(lines.join(QChar(10)));
+    m_alertUpcoming = lines;
+    updateAlertOverlay();
 }
 
 void DlgCdg::setCountdownSecs(int seconds)
@@ -215,6 +259,7 @@ void DlgCdg::setCountdownSecs(int seconds)
     ui->lblSeconds->setText(QString::number(seconds) + tr(" seconds"));
     m_timerAlertCountdown.stop();
     m_timerAlertCountdown.start();
+    updateAlertOverlay();
 }
 
 void DlgCdg::timerCountdownTimeout()
@@ -224,6 +269,7 @@ void DlgCdg::timerCountdownTimeout()
     ui->lblSeconds->setText(QString::number(m_countdownPos) + tr(" seconds"));
     ui->lblSeconds->repaint();
     ui->widgetAlert->repaint();
+    updateAlertOverlay();
 }
 
 void DlgCdg::alertBgColorChanged(const QColor &color)
@@ -233,8 +279,16 @@ void DlgCdg::alertBgColorChanged(const QColor &color)
     ui->widgetAlert->setPalette(palette);
 }
 
+void DlgCdg::alertBorderColorChanged(const QColor &color)
+{
+    m_alertBorderColor = color;
+    updateAlertOverlay();
+}
+
 void DlgCdg::alertTxtColorChanged(const QColor &color)
 {
+    m_alertTextColor = color;
+    updateAlertOverlay();
     auto palette = ui->widgetAlert->palette();
     palette.setColor(ui->widgetAlert->foregroundRole(), color);
     ui->widgetAlert->setPalette(palette);
@@ -292,6 +346,8 @@ void DlgCdg::slideShowMoveNext()
 
 void DlgCdg::alertFontChanged(const QFont &font)
 {
+    m_alertFont = font;
+    updateAlertOverlay();
     ui->label->setFont(font);
     ui->label_2->setFont(font);
     ui->label_4->setFont(font);

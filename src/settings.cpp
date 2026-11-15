@@ -1434,6 +1434,16 @@ void Settings::setAlertTxtColor(QColor color)
     settings->setValue("alertTxtColor", color);
 }
 
+void Settings::setAlertBorderColor(QColor color)
+{
+    settings->setValue("alertBorderColor", color);
+}
+
+QColor Settings::alertBorderColor()
+{
+    return settings->value("alertBorderColor", QColor(Qt::black)).value<QColor>();
+}
+
 int Settings::karaokeAATimeout()
 {
     return settings->value("karaokeAATimeout", 30).toInt();
@@ -1490,7 +1500,7 @@ bool Settings::showSongPauseStopWarning()
 
 QColor Settings::alertTxtColor()
 {
-    return settings->value("alertTxtColor", QApplication::palette().windowText().color()).value<QColor>();
+    return settings->value("alertTxtColor", QColor(Qt::white)).value<QColor>();
 }
 
 QColor Settings::alertBgColor()

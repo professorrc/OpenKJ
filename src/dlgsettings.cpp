@@ -123,7 +123,7 @@ DlgSettings::DlgSettings(MediaBackend &AudioBackend, MediaBackend &BmAudioBacken
                                 QString::number(clr.blue())));
     ui->btnAlertTxtColor->setStyleSheet(ss);
     ss = ui->btnAlertBgColor->styleSheet();
-    clr = m_settings.alertBgColor();
+    clr = m_settings.alertBorderColor();
     ss.replace("0,0,0", QString(QString::number(clr.red()) + "," + QString::number(clr.green()) + "," +
                                 QString::number(clr.blue())));
     ui->btnAlertBgColor->setStyleSheet(ss);
@@ -731,17 +731,17 @@ void DlgSettings::on_btnAlertTxtColor_clicked() {
 }
 
 void DlgSettings::on_btnAlertBgColor_clicked() {
-    QColor clr = QColorDialog::getColor(m_settings.alertBgColor(), this, "Select alert background color");
+    QColor clr = QColorDialog::getColor(m_settings.alertBorderColor(), this, "Select alert text border color");
     if (clr.isValid()) {
         QString ss = ui->btnAlertBgColor->styleSheet();
-        QColor oclr = m_settings.alertBgColor();
+        QColor oclr = m_settings.alertBorderColor();
         ss.replace(QString(QString::number(oclr.red()) + "," + QString::number(oclr.green()) + "," +
                            QString::number(oclr.blue())),
                    QString(QString::number(clr.red()) + "," + QString::number(clr.green()) + "," +
                            QString::number(clr.blue())));
         ui->btnAlertBgColor->setStyleSheet(ss);
-        m_settings.setAlertBgColor(clr);
-        emit alertBgColorChanged(clr);
+        m_settings.setAlertBorderColor(clr);
+        emit alertBorderColorChanged(clr);
     }
 }
 

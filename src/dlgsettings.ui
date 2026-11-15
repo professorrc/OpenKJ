@@ -1718,7 +1718,7 @@ QPushButton:default {
                      <item>
                       <widget class="QLabel" name="label_16">
                        <property name="text">
-                        <string>Background Color</string>
+                        <string>Border Color</string>
                        </property>
                       </widget>
                      </item>

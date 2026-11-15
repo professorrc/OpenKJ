@@ -4,6 +4,14 @@
 #include <QWidget>
 #include <QBoxLayout>
 #include <QResizeEvent>
+#include <QFont>
+#include <QColor>
+#include <QList>
+
+struct VideoOverlayLine {
+    QString text;
+    QFont font;
+};
 
 class VideoDisplay : public QWidget
 {
@@ -14,6 +22,10 @@ private:
     bool m_hasActiveVideo { false };
     bool m_fillOnPaint { false };
     bool m_repaintBackgroundOnce { false };
+    QList<VideoOverlayLine> m_overlay;
+    QColor m_overlayText{Qt::white};
+    QColor m_overlayBorder{Qt::black};
+    void paintOverlay(QPainter &painter);
 
 public:
     explicit VideoDisplay(QWidget *parent = nullptr);
@@ -26,6 +38,9 @@ public slots:
     void setBackground(const QPixmap &pixmap);
     void useDefaultBackground();
     void setHasActiveVideo(const bool &value);
+    // Text drawn centred over the background image (only while no video is playing).
+    void setOverlay(const QList<VideoOverlayLine> &lines, const QColor &text, const QColor &border);
+    void clearOverlay();
 
     /**
      * @brief Fill with black on paint event when video is playing.

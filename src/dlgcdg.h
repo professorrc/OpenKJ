@@ -74,6 +74,14 @@ private:
     std::unique_ptr<Ui::DlgCdg> ui;
     bool m_fullScreen{false};
     int m_countdownPos{0};
+    bool m_alertActive{false};
+    QString m_alertSinger;
+    QString m_alertSong;
+    QStringList m_alertUpcoming;
+    QFont m_alertFont;
+    QColor m_alertTextColor{Qt::white};
+    QColor m_alertBorderColor{Qt::black};
+    void updateAlertOverlay();
     int m_curSlideshowPos{-1};
     QRect m_lastSize;
     QTimer m_timer1s;
@@ -118,6 +126,7 @@ public slots:
     void tickerEnableChanged();
     void alertBgColorChanged(const QColor &color);
     void alertTxtColorChanged(const QColor &color);
+    void alertBorderColorChanged(const QColor &color);
     void setSlideshowInterval(int secs);
 
 protected:

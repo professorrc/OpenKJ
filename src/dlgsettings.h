@@ -78,6 +78,7 @@ signals:
 
     void alertTxtColorChanged(QColor color);
     void alertBgColorChanged(QColor color);
+    void alertBorderColorChanged(QColor color);
     void bgModeChanged(Settings::BgMode mode);
     void bgSlideShowDirChanged(QString dir);
     void cdgBgImageChanged();
