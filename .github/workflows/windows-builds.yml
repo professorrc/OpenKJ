@@ -228,11 +228,43 @@ jobs:
         Get-Item output\vc_redist.*.exe
       shell: pwsh
 
+    # Copy the GStreamer runtime only. The devel package (needed to compile)
+    # adds headers, link libraries and build metadata that OpenKJ never loads.
     - name: Copy in gstreamer dependencies
       run: |
-        cp -Rv ./gstreamer-dist/1.0/mingw_${{ matrix.arch }}/* output/
-        cp -v ./gstreamer-dist/1.0/mingw_${{ matrix.arch }}/bin/*.dll output/
-      shell: bash
+        $gst = 'gstreamer-dist/1.0/mingw_${{ matrix.arch }}'
+        function Show-Sizes($path, $label) {
+          $all = Get-ChildItem $path -Recurse -File
+          "$label total: $([math]::Round(($all | Measure-Object Length -Sum).Sum/1MB)) MB in $($all.Count) files"
+          Get-ChildItem $path -Directory | ForEach-Object {
+            $s = (Get-ChildItem $_.FullName -Recurse -File | Measure-Object Length -Sum).Sum
+            '  {0,-14} {1,6} MB' -f $_.Name, [math]::Round($s/1MB)
+          }
+        }
+        Show-Sizes $gst 'GStreamer before trimming'
+
+        foreach ($d in 'include','lib/pkgconfig','lib/cmake','lib/gstreamer-1.0/pkgconfig',
+                       'lib/gstreamer-1.0/include','lib/glib-2.0/include','share/aclocal',
+                       'share/gir-1.0','share/vala','share/gtk-doc','share/man') {
+          $p = Join-Path $gst $d
+          if (Test-Path $p) { Remove-Item $p -Recurse -Force }
+        }
+        Get-ChildItem $gst -Recurse -File -Include '*.a','*.lib','*.la','*.pc' | Remove-Item -Force
+        Show-Sizes $gst 'GStreamer after trimming'
+
+        Copy-Item "$gst/*" output -Recurse -Force
+        Copy-Item "$gst/bin/*.dll" output -Force
+
+        foreach ($f in 'libgstreamer-1.0-0.dll','lib/gstreamer-1.0/gstplayback.dll',
+                       'lib/gstreamer-1.0/gstcoreelements.dll','lib/gstreamer-1.0/gstlibav.dll',
+                       'libexec/gstreamer-1.0/gst-plugin-scanner.exe') {
+          if (-not (Test-Path (Join-Path output $f))) { throw "GStreamer runtime file missing: $f" }
+        }
+        "Largest files in output:"
+        Get-ChildItem output -Recurse -File | Sort-Object Length -Descending | Select-Object -First 15 |
+          ForEach-Object { '  {0,6} MB  {1}' -f [math]::Round($_.Length/1MB), $_.FullName.Substring((Resolve-Path output).Path.Length + 1) }
+        Show-Sizes output 'Output folder'
+      shell: pwsh
 
     - name: Copy in other dependencies
       run: |
