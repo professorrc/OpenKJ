@@ -210,23 +210,18 @@ void DlgCdg::updateAlertOverlay()
         small.setPointSizeF(small.pointSizeF() * 0.7);
     else if (small.pixelSize() > 0)
         small.setPixelSize(std::max(1, static_cast<int>(small.pixelSize() * 0.7)));
-    QFont gap = small;
-    if (gap.pointSizeF() > 0)
-        gap.setPointSizeF(gap.pointSizeF() * 0.6);
-    else if (gap.pixelSize() > 0)
-        gap.setPixelSize(std::max(1, static_cast<int>(gap.pixelSize() * 0.6)));
 
+    // Four lines: next singer and song, the "After that" heading and the
+    // following singers on one line, then the countdown.
     QList<VideoOverlayLine> lines;
-    lines.append({tr("Next Up:"), small});
-    lines.append({m_alertSinger, big});
-    lines.append({m_alertSong, small});
+    QString next = tr("Next Up: ") + m_alertSinger;
+    if (!m_alertSong.isEmpty())
+        next += " - " + m_alertSong;
+    lines.append({next, big});
     if (!m_alertUpcoming.isEmpty()) {
-        lines.append({QString(), gap});
         lines.append({tr("After that:"), small});
-        for (const auto &l : m_alertUpcoming)
-            lines.append({l, small});
+        lines.append({m_alertUpcoming.join(", "), small});
     }
-    lines.append({QString(), gap});
     lines.append({tr("Starts in: ") + QString::number(m_countdownPos) + tr(" seconds"), big});
     ui->videoDisplayKar->setOverlay(lines, m_alertTextColor, m_alertBorderColor);
 }

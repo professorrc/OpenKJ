@@ -76,27 +76,32 @@ void VideoDisplay::paintOverlay(QPainter &painter)
     const qreal maxWidth = width() * 0.92;
     const qreal maxHeight = height() * 0.92;
 
-    // Shrink everything together if the block is too tall or a line too wide.
-    auto measure = [&](qreal scale, qreal &totalH, qreal &widest) {
-        totalH = 0;
-        widest = 0;
-        for (const auto &line : m_overlay) {
-            QFont f = line.font;
-            if (f.pointSizeF() > 0)
-                f.setPointSizeF(f.pointSizeF() * scale);
-            else if (f.pixelSize() > 0)
-                f.setPixelSize(std::max(1, static_cast<int>(f.pixelSize() * scale)));
-            QFontMetricsF fm(f, this);
-            totalH += fm.height();
-            widest = std::max(widest, fm.horizontalAdvance(line.text));
-        }
+    auto scaledFont = [](QFont f, qreal scale) {
+        if (f.pointSizeF() > 0)
+            f.setPointSizeF(f.pointSizeF() * scale);
+        else if (f.pixelSize() > 0)
+            f.setPixelSize(std::max(1, static_cast<int>(f.pixelSize() * scale)));
+        return f;
     };
-    qreal scale = 1.0;
-    qreal totalH, widest;
-    measure(scale, totalH, widest);
-    if (totalH > maxHeight || widest > maxWidth) {
-        scale = std::min(maxHeight / std::max(totalH, 1.0), maxWidth / std::max(widest, 1.0));
-        measure(scale, totalH, widest);
+    // A line that is too wide shrinks on its own; if the whole block is then
+    // too tall, every line shrinks together.
+    QList<qreal> scales;
+    auto blockHeight = [&]() {
+        qreal h = 0;
+        for (int i = 0; i < m_overlay.size(); i++)
+            h += QFontMetricsF(scaledFont(m_overlay.at(i).font, scales.at(i)), this).height();
+        return h;
+    };
+    for (const auto &line : m_overlay) {
+        const qreal w = QFontMetricsF(line.font, this).horizontalAdvance(line.text);
+        scales.append(w > maxWidth ? maxWidth / w : 1.0);
+    }
+    qreal totalH = blockHeight();
+    if (totalH > maxHeight) {
+        const qreal g = maxHeight / totalH;
+        for (auto &s : scales)
+            s *= g;
+        totalH = blockHeight();
     }
 
     painter.save();
@@ -115,12 +120,9 @@ void VideoDisplay::paintOverlay(QPainter &painter)
         y = (height() - totalH) / 2.0;
     y += height() * m_overlayStyle.offsetYPct / 100.0;
     const qreal shiftX = width() * m_overlayStyle.offsetXPct / 100.0;
-    for (const auto &line : m_overlay) {
-        QFont f = line.font;
-        if (f.pointSizeF() > 0)
-            f.setPointSizeF(f.pointSizeF() * scale);
-        else if (f.pixelSize() > 0)
-            f.setPixelSize(std::max(1, static_cast<int>(f.pixelSize() * scale)));
+    for (int i = 0; i < m_overlay.size(); i++) {
+        const auto &line = m_overlay.at(i);
+        const QFont f = scaledFont(line.font, scales.at(i));
         QFontMetricsF fm(f, this);
         if (!line.text.isEmpty()) {
             const qreal lineW = fm.horizontalAdvance(line.text);

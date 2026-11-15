@@ -2568,7 +2568,7 @@ bool MainWindow::karaokeAAStartCountdown(int seconds) {
     m_logger->info("{} KaraokeAA - Starting {} second timer", m_loggingPrefix, seconds);
     m_timerKaraokeAA.start(seconds * 1000);
     cdgWindow->setNextSinger(nextSinger.name);
-    cdgWindow->setNextSong(nextSinger.nextSongArtistTitle());
+    cdgWindow->setNextSong(nextSinger.nextSongTitle());
     // The two singers after the next one who have a song queued, in rotation order.
     QStringList upcoming;
     int upPos = curPos;
@@ -2580,7 +2580,7 @@ bool MainWindow::karaokeAAStartCountdown(int seconds) {
             break;
         if (upSinger.nextSongPath().isEmpty())
             continue;
-        upcoming << upSinger.name + "  " + QChar(0x2013) + "  " + upSinger.nextSongArtistTitle();
+        upcoming << upSinger.name + ": " + upSinger.nextSongTitle();
     }
     cdgWindow->setUpcomingSingers(upcoming);
     cdgWindow->setCountdownSecs(seconds);
