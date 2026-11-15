@@ -927,6 +927,7 @@ void MainWindow::setupConnections() {
         m_rotModel.layoutChanged();
         // Ticker "next singer" text depends on who has songs queued.
         QTimer::singleShot(0, this, &MainWindow::rotationDataChanged);
+        QTimer::singleShot(0, this, &MainWindow::karaokeAAQueueCheck);
     });
     connect(m_lazyDurationUpdater.get(), &LazyDurationUpdateController::gotDuration, &m_karaokeSongsModel,
             &TableModelKaraokeSongs::setSongDuration);
@@ -1938,63 +1939,13 @@ void MainWindow::karaokeMediaBackend_stateChanged(const MediaBackend::State &sta
         m_mediaBackendBm.fadeIn(false);
         if (m_settings.karaokeAutoAdvance()) {
             m_logger->info("{}  - Karaoke Autoplay is enabled", m_loggingPrefix);
+            m_kAAWaitingForSong = false;
             if (m_kAASkip) {
                 m_kAASkip = false;
                 m_logger->info("{}  - Karaoke Autoplay set to skip, bailing out", m_loggingPrefix);
-            } else {
-                okj::RotationSinger nextSinger;
-                QString nextSongPath;
-                bool empty = false;
-
-                int curSingerId = m_rotModel.currentSinger();
-
-                int curPos = m_rotModel.getSinger(curSingerId).position;
-                if (m_settings.rotationAltSortOrder())
-                    curPos = m_curSingerOriginalPosition;
-                if (curSingerId == -1)
-                    curPos = static_cast<int>(m_rotModel.singerCount() - 1);
-                int loops = 0;
-                while ((nextSongPath == "") && (!empty)) {
-                    if (loops > m_rotModel.singerCount()) {
-                        empty = true;
-                    } else {
-                        if (++curPos >= m_rotModel.singerCount()) {
-                            curPos = 0;
-                        }
-                        nextSinger = m_rotModel.getSingerAtPosition(curPos);
-                        nextSongPath = nextSinger.nextSongPath();
-                        loops++;
-                    }
-                }
-                if (empty)
-                    m_logger->info("{} KaraokeAA - No more songs to play, giving up", m_loggingPrefix);
-                else {
-                    m_kAANextSinger = nextSinger.id;
-                    m_kAANextSongPath = nextSongPath;
-                    m_logger->info("{} KaraokeAA - Will play: {} - {}", m_loggingPrefix,
-                                   nextSinger.name.toStdString(), nextSongPath.toStdString());
-                    m_logger->info("{} KaraokeAA - Starting {} second timer", m_loggingPrefix,
-                                   m_settings.karaokeAATimeout());
-                    m_timerKaraokeAA.start(m_settings.karaokeAATimeout() * 1000);
-                    cdgWindow->setNextSinger(nextSinger.name);
-                    cdgWindow->setNextSong(nextSinger.nextSongArtistTitle());
-                    // The two singers after the next one who have a song queued, in rotation order.
-                    QStringList upcoming;
-                    int upPos = curPos;
-                    for (size_t i = 0; i + 1 < m_rotModel.singerCount() && upcoming.size() < 2; i++) {
-                        if (++upPos >= static_cast<int>(m_rotModel.singerCount()))
-                            upPos = 0;
-                        auto upSinger = m_rotModel.getSingerAtPosition(upPos);
-                        if (upSinger.id == nextSinger.id)
-                            break;
-                        if (upSinger.nextSongPath().isEmpty())
-                            continue;
-                        upcoming << upSinger.name + "  " + QChar(0x2013) + "  " + upSinger.nextSongArtistTitle();
-                    }
-                    cdgWindow->setUpcomingSingers(upcoming);
-                    cdgWindow->setCountdownSecs(m_settings.karaokeAATimeout());
-                    cdgWindow->showAlert(true);
-                }
+            } else if (!karaokeAAStartCountdown(m_settings.karaokeAATimeout())) {
+                m_logger->info("{} KaraokeAA - No more songs to play, waiting for a new song", m_loggingPrefix);
+                m_kAAWaitingForSong = true;
             }
         }
         if (m_settings.rotationAltSortOrder()) {
@@ -2585,6 +2536,69 @@ void MainWindow::markSongBad(const std::shared_ptr<okj::KaraokeSong>& song) {
                 msgBoxResult.exec();
                 break;
         }
+    }
+}
+
+// Finds the next singer with a song queued and starts the autoplay countdown.
+// Returns false if nobody has a song queued.
+bool MainWindow::karaokeAAStartCountdown(int seconds) {
+    const int count = static_cast<int>(m_rotModel.singerCount());
+    if (count == 0)
+        return false;
+    int curSingerId = m_rotModel.currentSinger();
+    int curPos = m_rotModel.getSinger(curSingerId).position;
+    if (m_settings.rotationAltSortOrder())
+        curPos = m_curSingerOriginalPosition;
+    if (curSingerId == -1)
+        curPos = count - 1;
+    okj::RotationSinger nextSinger;
+    QString nextSongPath;
+    for (int step = 0; step < count && nextSongPath.isEmpty(); step++) {
+        if (++curPos >= count)
+            curPos = 0;
+        nextSinger = m_rotModel.getSingerAtPosition(curPos);
+        nextSongPath = nextSinger.nextSongPath();
+    }
+    if (nextSongPath.isEmpty())
+        return false;
+    m_kAANextSinger = nextSinger.id;
+    m_kAANextSongPath = nextSongPath;
+    m_logger->info("{} KaraokeAA - Will play: {} - {}", m_loggingPrefix,
+                   nextSinger.name.toStdString(), nextSongPath.toStdString());
+    m_logger->info("{} KaraokeAA - Starting {} second timer", m_loggingPrefix, seconds);
+    m_timerKaraokeAA.start(seconds * 1000);
+    cdgWindow->setNextSinger(nextSinger.name);
+    cdgWindow->setNextSong(nextSinger.nextSongArtistTitle());
+    // The two singers after the next one who have a song queued, in rotation order.
+    QStringList upcoming;
+    int upPos = curPos;
+    for (int i = 0; i + 1 < count && upcoming.size() < 2; i++) {
+        if (++upPos >= count)
+            upPos = 0;
+        auto upSinger = m_rotModel.getSingerAtPosition(upPos);
+        if (upSinger.id == nextSinger.id)
+            break;
+        if (upSinger.nextSongPath().isEmpty())
+            continue;
+        upcoming << upSinger.name + "  " + QChar(0x2013) + "  " + upSinger.nextSongArtistTitle();
+    }
+    cdgWindow->setUpcomingSingers(upcoming);
+    cdgWindow->setCountdownSecs(seconds);
+    cdgWindow->showAlert(true);
+    return true;
+}
+
+// Autoplay ran out of songs earlier; when a song is queued, count down 30 seconds and play it.
+void MainWindow::karaokeAAQueueCheck() {
+    if (!m_kAAWaitingForSong || m_timerKaraokeAA.isActive())
+        return;
+    if (!m_settings.karaokeAutoAdvance() || m_mediaBackendKar.state() != MediaBackend::StoppedState) {
+        m_kAAWaitingForSong = false;
+        return;
+    }
+    if (karaokeAAStartCountdown(30)) {
+        m_kAAWaitingForSong = false;
+        m_logger->info("{} KaraokeAA - New song queued while idle, starting countdown", m_loggingPrefix);
     }
 }
 

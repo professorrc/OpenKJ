@@ -250,10 +250,18 @@ jobs:
           if (Test-Path $p) { Remove-Item $p -Recurse -Force }
         }
         Get-ChildItem $gst -Recurse -File -Include '*.a','*.lib','*.la','*.pc' | Remove-Item -Force
+        # Large plugins OpenKJ never uses: WebRTC calling/streaming, WebRTC echo
+        # cancellation and Amazon S3 storage.
+        foreach ($p in 'gstrswebrtc','gstwebrtcdsp','gstaws') {
+          Get-ChildItem "$gst/lib/gstreamer-1.0" -Filter "*$p.dll" | Remove-Item -Force
+        }
         Show-Sizes $gst 'GStreamer after trimming'
 
-        Copy-Item "$gst/*" output -Recurse -Force
+        # OpenKJ loads the GStreamer DLLs from its own folder, so the DLLs go there
+        # once. The bin folder itself (a second copy of the DLLs plus developer
+        # tools such as gst-dots-viewer) is not shipped.
         Copy-Item "$gst/bin/*.dll" output -Force
+        Get-ChildItem $gst | Where-Object Name -ne 'bin' | Copy-Item -Destination output -Recurse -Force
 
         # Plugin file names differ between GStreamer builds (gstX.dll or libgstX.dll).
         foreach ($f in 'libgstreamer-1.0-0.dll','lib/gstreamer-1.0/*gstplayback.dll',

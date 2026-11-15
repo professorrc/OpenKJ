@@ -81,6 +81,8 @@ private:
     bool m_sliderBmPositionPressed{false};
     bool m_shuttingDown{false};
     bool m_kAASkip{false};
+    // Autoplay ran out of songs; start a countdown when a new one is queued.
+    bool m_kAAWaitingForSong{false};
     bool m_k2kTransition{false};
     bool m_kHasActiveVideo{false};
     bool m_bmHasActiveVideo{false};
@@ -217,6 +219,8 @@ private slots:
     void editSong(const std::shared_ptr<okj::KaraokeSong>& song);
     void markSongBad(const std::shared_ptr<okj::KaraokeSong>& song);
     void karaokeAATimerTimeout();
+    void karaokeAAQueueCheck();
+    bool karaokeAAStartCountdown(int seconds);
     void timerButtonFlashTimeout();
     void autosizeViews();
     void autosizeQueueCols();
