@@ -20,6 +20,7 @@
 
 #include "dlgcdg.h"
 #include "ui_dlgcdg.h"
+#include <algorithm>
 #include <QDesktopWidget>
 #include <QSvgRenderer>
 #include <QPainter>
@@ -201,6 +202,13 @@ void DlgCdg::setNextSong(const QString &song)
     ui->lblNextSong->setText(song);
 }
 
+void DlgCdg::setUpcomingSingers(const QStringList &lines)
+{
+    ui->lblUpcomingTitle->setVisible(!lines.isEmpty());
+    ui->lblUpcoming->setVisible(!lines.isEmpty());
+    ui->lblUpcoming->setText(lines.join(QChar(10)));
+}
+
 void DlgCdg::setCountdownSecs(int seconds)
 {
     m_countdownPos = seconds;
@@ -290,6 +298,14 @@ void DlgCdg::alertFontChanged(const QFont &font)
     ui->lblNextSinger->setFont(font);
     ui->lblNextSong->setFont(font);
     ui->lblSeconds->setFont(font);
+    // The "after that" list is a bit smaller so two lines fit under the next singer.
+    QFont small = font;
+    if (small.pointSizeF() > 0)
+        small.setPointSizeF(small.pointSizeF() * 0.7);
+    else if (small.pixelSize() > 0)
+        small.setPixelSize(std::max(1, static_cast<int>(small.pixelSize() * 0.7)));
+    ui->lblUpcomingTitle->setFont(small);
+    ui->lblUpcoming->setFont(small);
 }
 
 void DlgCdg::mouseMove([[maybe_unused]]QMouseEvent *event)

@@ -100,6 +100,7 @@ public:
 public slots:
     void showAlert(bool show);
     void setNextSinger(const QString &name);
+    void setUpcomingSingers(const QStringList &lines);
     void setNextSong(const QString &song);
     void setCountdownSecs(int seconds);
     void applyBackgroundImageMode();

@@ -1976,6 +1976,20 @@ void MainWindow::karaokeMediaBackend_stateChanged(const MediaBackend::State &sta
                     m_timerKaraokeAA.start(m_settings.karaokeAATimeout() * 1000);
                     cdgWindow->setNextSinger(nextSinger.name);
                     cdgWindow->setNextSong(nextSinger.nextSongArtistTitle());
+                    // The two singers after the next one who have a song queued, in rotation order.
+                    QStringList upcoming;
+                    int upPos = curPos;
+                    for (size_t i = 0; i + 1 < m_rotModel.singerCount() && upcoming.size() < 2; i++) {
+                        if (++upPos >= static_cast<int>(m_rotModel.singerCount()))
+                            upPos = 0;
+                        auto upSinger = m_rotModel.getSingerAtPosition(upPos);
+                        if (upSinger.id == nextSinger.id)
+                            break;
+                        if (upSinger.nextSongPath().isEmpty())
+                            continue;
+                        upcoming << upSinger.name + "  " + QChar(0x2013) + "  " + upSinger.nextSongArtistTitle();
+                    }
+                    cdgWindow->setUpcomingSingers(upcoming);
                     cdgWindow->setCountdownSecs(m_settings.karaokeAATimeout());
                     cdgWindow->showAlert(true);
                 }
