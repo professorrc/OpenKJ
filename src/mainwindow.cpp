@@ -925,6 +925,8 @@ void MainWindow::setupConnections() {
     connect(&m_qModel, &TableModelQueueSongs::queueModified, [&]() {
         updateRotationDuration();
         m_rotModel.layoutChanged();
+        // Ticker "next singer" text depends on who has songs queued.
+        QTimer::singleShot(0, this, &MainWindow::rotationDataChanged);
     });
     connect(m_lazyDurationUpdater.get(), &LazyDurationUpdateController::gotDuration, &m_karaokeSongsModel,
             &TableModelKaraokeSongs::setSongDuration);
@@ -2094,12 +2096,14 @@ void MainWindow::rotationDataChanged() {
         } else
             nsPos = m_rotModel.getSinger(m_rotModel.currentSinger()).position;
         QString ns = "[nobody]";
-        if (m_rotModel.singerCount() > 0) {
-            if (nsPos + 1 < m_rotModel.singerCount())
-                nsPos++;
-            else
-                nsPos = 0;
-            ns = m_rotModel.getSingerAtPosition(nsPos).name;
+        // Next singer in rotation order who has a song queued (skip empty queues).
+        const int nsCount = static_cast<int>(m_rotModel.singerCount());
+        for (int step = 1; step <= nsCount; step++) {
+            const auto &candidate = m_rotModel.getSingerAtPosition((nsPos + step) % nsCount);
+            if (!candidate.nextSongPath().isEmpty()) {
+                ns = candidate.name;
+                break;
+            }
         }
         tickerText.replace("%cs", cs);
         tickerText.replace("%ns", ns);
@@ -2129,28 +2133,30 @@ void MainWindow::rotationDataChanged() {
             tickerText += "None ";
             displayPos = -1;
         }
-        int listSize;
-        if (m_settings.tickerFullRotation() || (m_rotModel.singerCount() < m_settings.tickerShowNumSingers())) {
-            if (curSingerName == "")
-                listSize = static_cast<int>(m_rotModel.singerCount());
-            else
-                listSize = static_cast<int>(m_rotModel.singerCount() - 1);
+        // Singers after the current one, in rotation order, who have a song queued.
+        const int rotCount = static_cast<int>(m_rotModel.singerCount());
+        const int steps = (displayPos < 0) ? rotCount : rotCount - 1;
+        QStringList upcoming;
+        for (int step = 1; step <= steps; step++) {
+            const int pos = (displayPos < 0) ? step - 1 : (displayPos + step) % rotCount;
+            const auto &candidate = m_rotModel.getSingerAtPosition(pos);
+            if (!candidate.nextSongPath().isEmpty())
+                upcoming << candidate.name;
+        }
+        int listSize = static_cast<int>(upcoming.size());
+        if (m_settings.tickerFullRotation() || (listSize <= m_settings.tickerShowNumSingers())) {
             if (listSize > 0)
                 tickerText += " " + sep + " Upcoming: ";
         } else {
             listSize = m_settings.tickerShowNumSingers();
             tickerText += " " + sep + " Next ";
-            tickerText += QString::number(m_settings.tickerShowNumSingers());
+            tickerText += QString::number(listSize);
             tickerText += " Singers: ";
         }
         for (int i = 0; i < listSize; i++) {
-            if (displayPos + 1 < m_rotModel.singerCount())
-                displayPos++;
-            else
-                displayPos = 0;
             tickerText += QString::number(i + 1);
             tickerText += ") ";
-            tickerText += m_rotModel.getSingerAtPosition(displayPos).name;
+            tickerText += upcoming.at(i);
             if (i < listSize - 1)
                 tickerText += " ";
         }

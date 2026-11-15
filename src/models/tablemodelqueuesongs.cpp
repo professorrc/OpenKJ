@@ -307,8 +307,11 @@ void TableModelQueueSongs::setPlayed(const int songId, const bool played) {
     auto it = std::find_if(m_songs.begin(), m_songs.end(), [&songId](okj::QueueSong &song) {
         return (song.id == songId);
     });
-    if (it == m_songs.end())
+    if (it == m_songs.end()) {
+        // Song belongs to a singer not shown in the queue view; still notify.
+        emit queueModified(m_curSingerId);
         return;
+    }
     it->played = played;
     emit dataChanged(this->index(it->position, 0), this->index(it->position, columnCount() - 1),
                      QVector<int>{Qt::FontRole, Qt::BackgroundRole, Qt::ForegroundRole});
@@ -372,6 +375,8 @@ void TableModelQueueSongs::songAddSlot(int songId, int singerId, int keyChg) {
         query.exec();
         if (auto error = query.lastError(); error.type() != QSqlError::NoError)
             m_logger->error("{} DB error: {}", m_loggingPrefix, error.text());
+        // Let the rotation and ticker know this singer now has a song waiting.
+        emit queueModified(singerId);
     }
 }
 
