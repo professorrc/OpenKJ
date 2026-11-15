@@ -212,6 +212,16 @@ jobs:
         dir output
       shell: cmd
 
+    # Qt 5.15.2's windeployqt does not recognise current Visual Studio, so it
+    # skips vc_redist.x64.exe, which the installer runs. Copy it in directly.
+    - name: Copy in VC++ redistributable
+      run: |
+        $src = Join-Path $env:VCToolsRedistDir 'vc_redist.${{ matrix.msvcarch }}.exe'
+        if (-not (Test-Path $src)) { throw "vc_redist not found at $src" }
+        Copy-Item $src output\ -Force
+        Get-Item output\vc_redist.*.exe
+      shell: pwsh
+
     - name: Copy in gstreamer dependencies
       run: |
         cp -Rv ./gstreamer-dist/1.0/mingw_${{ matrix.arch }}/* output/
