@@ -79,6 +79,7 @@ signals:
     void alertTxtColorChanged(QColor color);
     void alertBgColorChanged(QColor color);
     void alertBorderColorChanged(QColor color);
+    void alertLayoutChanged();
     void bgModeChanged(Settings::BgMode mode);
     void bgSlideShowDirChanged(QString dir);
     void cdgBgImageChanged();
@@ -143,6 +144,11 @@ private slots:
     void on_checkBoxShowKAAAlert_toggled(bool checked);
     void on_checkBoxKAA_toggled(bool checked);
     void on_spinBoxAADelay_valueChanged(int arg1);
+    void on_spinBoxAlertBorderWidth_valueChanged(int arg1);
+    void on_comboBoxAlertVAlign_currentIndexChanged(int index);
+    void on_comboBoxAlertHAlign_currentIndexChanged(int index);
+    void on_spinBoxAlertOffsetX_valueChanged(int arg1);
+    void on_spinBoxAlertOffsetY_valueChanged(int arg1);
     void on_btnAlertFont_clicked();
     void on_btnAlertTxtColor_clicked();
     void on_btnAlertBgColor_clicked();

@@ -127,6 +127,7 @@ public slots:
     void alertBgColorChanged(const QColor &color);
     void alertTxtColorChanged(const QColor &color);
     void alertBorderColorChanged(const QColor &color);
+    void alertLayoutChanged();
     void setSlideshowInterval(int secs);
 
 protected:

@@ -226,6 +226,11 @@ public:
     bool showSongPauseStopWarning();
     QColor alertTxtColor();
     QColor alertBorderColor();
+    int alertBorderWidth();
+    int alertVAlign();
+    int alertHAlign();
+    int alertOffsetX();
+    int alertOffsetY();
     QColor alertBgColor();
     bool bmAutoStart();
     void setBmAutoStart(bool enabled);
@@ -349,6 +354,11 @@ public slots:
     void setAlertBgColor(QColor color);
     void setAlertTxtColor(QColor color);
     void setAlertBorderColor(QColor color);
+    void setAlertBorderWidth(int width);
+    void setAlertVAlign(int align);
+    void setAlertHAlign(int align);
+    void setAlertOffsetX(int pct);
+    void setAlertOffsetY(int pct);
     void setIgnoreAposInSearch(bool ignore);
     void setShowSongPauseStopWarning(bool enabled);
     void setBookCreatorArtistFont(QFont font);

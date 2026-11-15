@@ -54,6 +54,13 @@ void VideoDisplay::setOverlay(const QList<VideoOverlayLine> &lines, const QColor
     update();
 }
 
+void VideoDisplay::setOverlayStyle(const VideoOverlayStyle &style)
+{
+    m_overlayStyle = style;
+    if (!m_overlay.isEmpty())
+        update();
+}
+
 void VideoDisplay::clearOverlay()
 {
     if (m_overlay.isEmpty())
@@ -95,7 +102,19 @@ void VideoDisplay::paintOverlay(QPainter &painter)
     painter.save();
     painter.setRenderHint(QPainter::Antialiasing, true);
     painter.setRenderHint(QPainter::TextAntialiasing, true);
-    qreal y = (height() - totalH) / 2.0;
+    // Block position: aligned inside the same 92% area the block is fitted to,
+    // then shifted by the user's offsets.
+    const qreal marginX = (width() - maxWidth) / 2.0;
+    const qreal marginY = (height() - maxHeight) / 2.0;
+    qreal y;
+    if (m_overlayStyle.vAlign == 0)
+        y = marginY;
+    else if (m_overlayStyle.vAlign == 2)
+        y = height() - marginY - totalH;
+    else
+        y = (height() - totalH) / 2.0;
+    y += height() * m_overlayStyle.offsetYPct / 100.0;
+    const qreal shiftX = width() * m_overlayStyle.offsetXPct / 100.0;
     for (const auto &line : m_overlay) {
         QFont f = line.font;
         if (f.pointSizeF() > 0)
@@ -104,12 +123,24 @@ void VideoDisplay::paintOverlay(QPainter &painter)
             f.setPixelSize(std::max(1, static_cast<int>(f.pixelSize() * scale)));
         QFontMetricsF fm(f, this);
         if (!line.text.isEmpty()) {
-            const qreal x = (width() - fm.horizontalAdvance(line.text)) / 2.0;
+            const qreal lineW = fm.horizontalAdvance(line.text);
+            qreal x;
+            if (m_overlayStyle.hAlign == 0)
+                x = marginX;
+            else if (m_overlayStyle.hAlign == 2)
+                x = width() - marginX - lineW;
+            else
+                x = (width() - lineW) / 2.0;
+            x += shiftX;
             QPainterPath path;
             path.addText(x, y + fm.ascent(), f, line.text);
-            const qreal borderWidth = std::max(2.0, fm.height() / 9.0);
-            QPen pen(m_overlayBorder, borderWidth, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
-            painter.strokePath(path, pen);
+            const qreal borderWidth = (m_overlayStyle.borderWidth < 0)
+                    ? std::max(2.0, fm.height() / 9.0)
+                    : static_cast<qreal>(m_overlayStyle.borderWidth);
+            if (borderWidth > 0) {
+                QPen pen(m_overlayBorder, borderWidth, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
+                painter.strokePath(path, pen);
+            }
             painter.fillPath(path, m_overlayText);
         }
         y += fm.height();

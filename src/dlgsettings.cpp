@@ -209,6 +209,11 @@ DlgSettings::DlgSettings(MediaBackend &AudioBackend, MediaBackend &BmAudioBacken
     ui->spinBoxAADelay->setValue(m_settings.karaokeAATimeout());
     ui->checkBoxKAA->setChecked(m_settings.karaokeAutoAdvance());
     ui->checkBoxShowKAAAlert->setChecked(m_settings.karaokeAAAlertEnabled());
+    ui->spinBoxAlertBorderWidth->setValue(m_settings.alertBorderWidth());
+    ui->comboBoxAlertVAlign->setCurrentIndex(m_settings.alertVAlign());
+    ui->comboBoxAlertHAlign->setCurrentIndex(m_settings.alertHAlign());
+    ui->spinBoxAlertOffsetX->setValue(m_settings.alertOffsetX());
+    ui->spinBoxAlertOffsetY->setValue(m_settings.alertOffsetY());
     ui->cbxQueueRemovalWarning->setChecked(m_settings.showQueueRemovalWarning());
     ui->cbxSingerRemovalWarning->setChecked(m_settings.showSingerRemovalWarning());
     ui->cbxSongInterruptionWarning->setChecked(m_settings.showSongInterruptionWarning());
@@ -704,6 +709,41 @@ void DlgSettings::on_spinBoxAADelay_valueChanged(int arg1) {
     if (!m_pageSetupDone)
         return;
     m_settings.setKaraokeAATimeout(arg1);
+}
+
+void DlgSettings::on_spinBoxAlertBorderWidth_valueChanged(int arg1) {
+    if (!m_pageSetupDone)
+        return;
+    m_settings.setAlertBorderWidth(arg1);
+    emit alertLayoutChanged();
+}
+
+void DlgSettings::on_comboBoxAlertVAlign_currentIndexChanged(int index) {
+    if (!m_pageSetupDone || index < 0)
+        return;
+    m_settings.setAlertVAlign(index);
+    emit alertLayoutChanged();
+}
+
+void DlgSettings::on_comboBoxAlertHAlign_currentIndexChanged(int index) {
+    if (!m_pageSetupDone || index < 0)
+        return;
+    m_settings.setAlertHAlign(index);
+    emit alertLayoutChanged();
+}
+
+void DlgSettings::on_spinBoxAlertOffsetX_valueChanged(int arg1) {
+    if (!m_pageSetupDone)
+        return;
+    m_settings.setAlertOffsetX(arg1);
+    emit alertLayoutChanged();
+}
+
+void DlgSettings::on_spinBoxAlertOffsetY_valueChanged(int arg1) {
+    if (!m_pageSetupDone)
+        return;
+    m_settings.setAlertOffsetY(arg1);
+    emit alertLayoutChanged();
 }
 
 void DlgSettings::on_btnAlertFont_clicked() {

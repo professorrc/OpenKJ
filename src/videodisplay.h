@@ -13,6 +13,16 @@ struct VideoOverlayLine {
     QFont font;
 };
 
+// Where and how the overlay text block is drawn. The defaults give the
+// original look: centred, outline width chosen from the text height.
+struct VideoOverlayStyle {
+    int borderWidth{-1};                 // pixels; -1 = automatic, 0 = no outline
+    int vAlign{1};                       // 0 = top, 1 = middle, 2 = bottom
+    int hAlign{1};                       // 0 = left, 1 = centre, 2 = right
+    int offsetXPct{0};                   // move right by this % of the screen width
+    int offsetYPct{0};                   // move down by this % of the screen height
+};
+
 class VideoDisplay : public QWidget
 {
     Q_OBJECT
@@ -25,6 +35,7 @@ private:
     QList<VideoOverlayLine> m_overlay;
     QColor m_overlayText{Qt::white};
     QColor m_overlayBorder{Qt::black};
+    VideoOverlayStyle m_overlayStyle;
     void paintOverlay(QPainter &painter);
 
 public:
@@ -41,6 +52,7 @@ public slots:
     // Text drawn centred over the background image (only while no video is playing).
     void setOverlay(const QList<VideoOverlayLine> &lines, const QColor &text, const QColor &border);
     void clearOverlay();
+    void setOverlayStyle(const VideoOverlayStyle &style);
 
     /**
      * @brief Fill with black on paint event when video is playing.

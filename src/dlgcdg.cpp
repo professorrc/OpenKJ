@@ -76,6 +76,7 @@ DlgCdg::DlgCdg(MediaBackend &KaraokeBackend, MediaBackend &BreakBackend, QWidget
     alertBgColorChanged(m_settings.alertBgColor());
     alertTxtColorChanged(m_settings.alertTxtColor());
     alertBorderColorChanged(m_settings.alertBorderColor());
+    alertLayoutChanged();
     cdgOffsetsChanged();
     connect(ui->videoDisplayKar, &VideoDisplay::mouseMoveEvent, this, &DlgCdg::mouseMove);
     connect(ui->btnToggleFullscreen, &QPushButton::clicked, this, &DlgCdg::btnToggleFullscreenClicked);
@@ -283,6 +284,17 @@ void DlgCdg::alertBorderColorChanged(const QColor &color)
 {
     m_alertBorderColor = color;
     updateAlertOverlay();
+}
+
+void DlgCdg::alertLayoutChanged()
+{
+    VideoOverlayStyle style;
+    style.borderWidth = m_settings.alertBorderWidth();
+    style.vAlign = m_settings.alertVAlign();
+    style.hAlign = m_settings.alertHAlign();
+    style.offsetXPct = m_settings.alertOffsetX();
+    style.offsetYPct = m_settings.alertOffsetY();
+    ui->videoDisplayKar->setOverlayStyle(style);
 }
 
 void DlgCdg::alertTxtColorChanged(const QColor &color)

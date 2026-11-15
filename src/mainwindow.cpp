@@ -1780,6 +1780,7 @@ void MainWindow::actionSettingsTriggered() {
     connect(settingsDialog, &DlgSettings::applicationFontChanged, this, &MainWindow::appFontChanged);
     connect(settingsDialog, &DlgSettings::alertBorderColorChanged, cdgWindow.get(), &DlgCdg::alertBorderColorChanged);
     connect(settingsDialog, &DlgSettings::alertTxtColorChanged, cdgWindow.get(), &DlgCdg::alertTxtColorChanged);
+    connect(settingsDialog, &DlgSettings::alertLayoutChanged, cdgWindow.get(), &DlgCdg::alertLayoutChanged);
     connect(settingsDialog, &DlgSettings::bgModeChanged, cdgWindow.get(), &DlgCdg::applyBackgroundImageMode);
     connect(settingsDialog, &DlgSettings::bgSlideShowDirChanged, cdgWindow.get(), &DlgCdg::applyBackgroundImageMode);
     connect(settingsDialog, &DlgSettings::cdgBgImageChanged, cdgWindow.get(), &DlgCdg::applyBackgroundImageMode);
@@ -2070,9 +2071,8 @@ void MainWindow::rotationDataChanged() {
 
     }
     if (m_settings.tickerShowRotationInfo()) {
-        tickerText += "Singers: ";
-        tickerText += QString::number(m_rotModel.singerCount());
-        tickerText += " " + sep + " Current: ";
+        // No "Singers: N" count on the ticker; start with the current singer.
+        tickerText += "Current: ";
         int displayPos;
         QString curSingerName = m_rotModel.getSinger(m_rotModel.currentSinger()).name;
         if (m_rotModel.currentSinger() < 0)

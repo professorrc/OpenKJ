@@ -1755,6 +1755,169 @@ QPushButton:default {
                      </item>
                     </layout>
                    </item>
+                   <item>
+                    <layout class="QHBoxLayout" name="horizontalLayoutAlertLayout1">
+                     <item>
+                      <widget class="QLabel" name="labelAlertBorderWidth">
+                       <property name="text">
+                        <string>Border Width</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QSpinBox" name="spinBoxAlertBorderWidth">
+                       <property name="suffix">
+                        <string> px</string>
+                       </property>
+                       <property name="specialValueText">
+                        <string>Auto</string>
+                       </property>
+                       <property name="toolTip">
+                        <string>Outline thickness around the alert text in pixels. Auto scales it with the text size; 0 turns the outline off.</string>
+                       </property>
+                       <property name="minimum">
+                        <number>-1</number>
+                       </property>
+                       <property name="maximum">
+                        <number>40</number>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <spacer name="horizontalSpacerAlertLayout1">
+                       <property name="orientation">
+                        <enum>Qt::Horizontal</enum>
+                       </property>
+                       <property name="sizeHint" stdset="0">
+                        <size>
+                         <width>40</width>
+                         <height>20</height>
+                        </size>
+                       </property>
+                      </spacer>
+                     </item>
+                     <item>
+                      <widget class="QLabel" name="labelAlertPosition">
+                       <property name="text">
+                        <string>Position</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QComboBox" name="comboBoxAlertVAlign">
+                       <property name="toolTip">
+                        <string>Vertical position of the alert text on the video display</string>
+                       </property>
+                       <item>
+                        <property name="text">
+                         <string>Top</string>
+                        </property>
+                       </item>
+                       <item>
+                        <property name="text">
+                         <string>Middle</string>
+                        </property>
+                       </item>
+                       <item>
+                        <property name="text">
+                         <string>Bottom</string>
+                        </property>
+                       </item>
+                       <property name="currentIndex">
+                        <number>1</number>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QComboBox" name="comboBoxAlertHAlign">
+                       <property name="toolTip">
+                        <string>Horizontal alignment of the alert text on the video display</string>
+                       </property>
+                       <item>
+                        <property name="text">
+                         <string>Left</string>
+                        </property>
+                       </item>
+                       <item>
+                        <property name="text">
+                         <string>Center</string>
+                        </property>
+                       </item>
+                       <item>
+                        <property name="text">
+                         <string>Right</string>
+                        </property>
+                       </item>
+                       <property name="currentIndex">
+                        <number>1</number>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </item>
+                   <item>
+                    <layout class="QHBoxLayout" name="horizontalLayoutAlertLayout2">
+                     <item>
+                      <widget class="QLabel" name="labelAlertOffsetX">
+                       <property name="text">
+                        <string>Move Right</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QSpinBox" name="spinBoxAlertOffsetX">
+                       <property name="suffix">
+                        <string> %</string>
+                       </property>
+                       <property name="toolTip">
+                        <string>Shift the alert text right (negative = left) by this percent of the screen width</string>
+                       </property>
+                       <property name="minimum">
+                        <number>-50</number>
+                       </property>
+                       <property name="maximum">
+                        <number>50</number>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <spacer name="horizontalSpacerAlertLayout2">
+                       <property name="orientation">
+                        <enum>Qt::Horizontal</enum>
+                       </property>
+                       <property name="sizeHint" stdset="0">
+                        <size>
+                         <width>40</width>
+                         <height>20</height>
+                        </size>
+                       </property>
+                      </spacer>
+                     </item>
+                     <item>
+                      <widget class="QLabel" name="labelAlertOffsetY">
+                       <property name="text">
+                        <string>Move Down</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QSpinBox" name="spinBoxAlertOffsetY">
+                       <property name="suffix">
+                        <string> %</string>
+                       </property>
+                       <property name="toolTip">
+                        <string>Shift the alert text down (negative = up) by this percent of the screen height</string>
+                       </property>
+                       <property name="minimum">
+                        <number>-50</number>
+                       </property>
+                       <property name="maximum">
+                        <number>50</number>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </item>
                   </layout>
                  </widget>
                 </item>

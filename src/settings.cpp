@@ -1444,6 +1444,18 @@ QColor Settings::alertBorderColor()
     return settings->value("alertBorderColor", QColor(Qt::black)).value<QColor>();
 }
 
+// Autoplay alert text layout. -1 border width = automatic (scales with text).
+int Settings::alertBorderWidth() { return settings->value("alertBorderWidth", -1).toInt(); }
+void Settings::setAlertBorderWidth(int width) { settings->setValue("alertBorderWidth", width); }
+int Settings::alertVAlign() { return settings->value("alertVAlign", 1).toInt(); }
+void Settings::setAlertVAlign(int align) { settings->setValue("alertVAlign", align); }
+int Settings::alertHAlign() { return settings->value("alertHAlign", 1).toInt(); }
+void Settings::setAlertHAlign(int align) { settings->setValue("alertHAlign", align); }
+int Settings::alertOffsetX() { return settings->value("alertOffsetX", 0).toInt(); }
+void Settings::setAlertOffsetX(int pct) { settings->setValue("alertOffsetX", pct); }
+int Settings::alertOffsetY() { return settings->value("alertOffsetY", 0).toInt(); }
+void Settings::setAlertOffsetY(int pct) { settings->setValue("alertOffsetY", pct); }
+
 int Settings::karaokeAATimeout()
 {
     return settings->value("karaokeAATimeout", 30).toInt();
