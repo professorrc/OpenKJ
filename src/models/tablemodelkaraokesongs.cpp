@@ -560,5 +560,11 @@ std::vector<std::shared_ptr<okj::KaraokeSong>> TableModelKaraokeSongs::findExact
         if (song->artistL.trimmed() == a && song->titleL.trimmed() == t)
             matches.push_back(song);
     }
+    // Same order the song search shows for equal artist/title: song id, then db id.
+    std::sort(matches.begin(), matches.end(), [](const auto &a, const auto &b) {
+        if (a->songidL != b->songidL)
+            return a->songidL < b->songidL;
+        return a->id < b->id;
+    });
     return matches;
 }

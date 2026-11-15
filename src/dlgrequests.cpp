@@ -200,10 +200,9 @@ void DlgRequests::autoAddRequests() {
         if (singerName.isEmpty())
             continue;
         auto matches = dbModel.findExact(request.artist(), request.title());
-        if (matches.size() != 1) {
-            m_reqLogger->info("RequestID: {} | Auto-add skipped, {} local matches | Song: {} - {}",
+        if (matches.empty()) {
+            m_reqLogger->info("RequestID: {} | Auto-add skipped, no local match | Song: {} - {}",
                               requestId,
-                              matches.size(),
                               request.artist().toStdString(),
                               request.title().toStdString()
             );
@@ -212,7 +211,17 @@ void DlgRequests::autoAddRequests() {
             m_skippedIds.insert(requestId);
             continue;
         }
-        const auto &song = matches.front();
+        // Several versions (e.g. different disc ids): take the first one in search order.
+        const auto song = matches.front();
+        if (matches.size() > 1) {
+            m_reqLogger->info("RequestID: {} | {} local matches, using first: {} | Song: {} - {}",
+                              requestId,
+                              matches.size(),
+                              song->songid.toStdString(),
+                              request.artist().toStdString(),
+                              request.title().toStdString()
+            );
+        }
 
         // Rotation lookup by name is case sensitive, so find the stored spelling first.
         QString existingName;
